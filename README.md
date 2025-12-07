@@ -30,7 +30,7 @@ API_SECRET=your-api-secret-here
 CHECK_INTERVAL=60
 
 # Docker Image (for production use)
-DOCKER_IMAGE=yourusername/opnsense-vpn-monitor:latest
+DOCKER_IMAGE=curiohokiest2e/opnsense-vpn-monitor:latest
 ```
 
 The service will load these environment variables automatically.
@@ -41,10 +41,10 @@ The easiest way to run OPNsense VPN Monitor is using the pre-built Docker image 
 
 ```bash
 # Pull the latest image
-docker pull yourusername/opnsense-vpn-monitor:latest
+docker pull curiohokiest2e/opnsense-vpn-monitor:latest
 
 # Or use the docker-compose.yml (update DOCKER_IMAGE in .env)
-echo "DOCKER_IMAGE=yourusername/opnsense-vpn-monitor:latest" >> .env
+echo "DOCKER_IMAGE=curiohokiest2e/opnsense-vpn-monitor:latest" >> .env
 docker-compose up -d
 ```
 
@@ -95,7 +95,7 @@ To build and push manually:
 
 ```bash
 # Build for multiple platforms
-docker buildx build --platform linux/amd64,linux/arm64 -t yourusername/opnsense-vpn-monitor:latest --push .
+docker buildx build --platform linux/amd64,linux/arm64 -t curiohokiest2e/opnsense-vpn-monitor:latest --push .
 
 # Or use the included script
 ./build-and-push.sh

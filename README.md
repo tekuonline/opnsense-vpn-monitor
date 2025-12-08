@@ -10,38 +10,59 @@ A Docker-based service that monitors OpenVPN connection status via OPNsense API 
 - Configurable via environment variables
 - Runs continuously in a Docker container
 - Multi-platform support (AMD64/ARM64)
-- Automated Docker Hub publishing
 
 ## Quick Start
 
-### Using Pre-built Docker Image (Recommended)
+### Prerequisites
 
-1. **Get API credentials from OPNsense**:
-   - Log into your OPNsense web interface
-   - Navigate to **System > Access > Users**
-   - Select/create a user for API access
-   - Click **Create API key** and download the credentials
+- Docker and Docker Compose installed
+- Access to OPNsense API with valid API key/secret
+- Network connectivity to your OPNsense instance
 
-2. **Set up the service**:
-   ```bash
-   # Clone this repository
-   git clone https://github.com/tekuonline/opnsense-vpn-monitor.git
-   cd opnsense-vpn-monitor
+### Step 1: Get API Credentials from OPNsense
 
-   # Copy and configure environment file
-   cp .env.example .env
-   # Edit .env with your OPNsense API credentials
+1. Log into your OPNsense web interface
+2. Navigate to **System > Access > Users**
+3. Select/create a user for API access
+4. Click **Create API key** and download the credentials
 
-   # Start the service
-   docker-compose up -d
-   ```
+### Step 2: Set Up Environment Variables
 
-3. **Check logs**:
-   ```bash
-   docker-compose logs -f
-   ```
+Create a `.env` file in your project directory:
 
-### Manual Docker Run
+```bash
+# OPNsense API base URL
+API_BASE_URL=https://your-opnsense-instance.com
+
+# OPNsense API credentials (Basic Auth)
+API_KEY=your-api-key-here
+API_SECRET=your-api-secret-here
+
+# Check interval in seconds (default: 60)
+CHECK_INTERVAL=60
+```
+
+### Step 3: Run with Docker Compose
+
+Create a `docker-compose.yml` file:
+
+```yaml
+services:
+  opnsense-vpn-monitor:
+    image: curiohokiest2e/opnsense-vpn-monitor:latest
+    container_name: opnsense-vpn-monitor
+    env_file:
+      - .env
+    restart: unless-stopped
+```
+
+Start the service:
+
+```bash
+docker-compose up -d
+```
+
+### Alternative: Run with Docker CLI
 
 ```bash
 docker run -d \
@@ -50,58 +71,94 @@ docker run -d \
   curiohokiest2e/opnsense-vpn-monitor:latest
 ```
 
-## Development Setup
+### Step 4: Verify It's Working
 
-For development or building from source:
+Check the logs to ensure the service is monitoring correctly:
 
-1. Clone this repository
-2. Copy the sample environment file: `cp .env.example .env`
-3. Edit `.env` with your OPNsense API credentials
-4. Build and run: `docker-compose up --build`
+```bash
+docker-compose logs -f opnsense-vpn-monitor
+```
 
-**Note**: The `docker-compose.override.yml` file is included for local development and will build the image from source instead of using the pre-built Docker Hub image.
+You should see output like:
+```
+2024-01-15 10:30:00,123 - INFO - Checking OpenVPN services...
+2024-01-15 10:30:00,456 - INFO - Service ovpns1 is UP (connected, IP: 192.168.1.100)
+2024-01-15 10:30:00,789 - INFO - All services are running correctly
+```
 
-## Production Deployment
+## Configuration
 
-For production use:
-
-1. **Security**: Store the `.env` file securely and never commit it to version control
-2. **Monitoring**: Set up log aggregation to monitor service health
-3. **Updates**: Regularly update the Docker image and monitor for OPNsense API changes
-4. **Backup**: Keep backups of your API credentials in a secure location
-
-## Docker Hub & CI/CD
-
-This project uses automated Docker image building and publishing via GitHub Actions. The latest images are available on Docker Hub at `curiohokiest2e/opnsense-vpn-monitor`.
-
-### For Users (Using Pre-built Images)
-
-Simply use the Docker Hub image as shown in the Quick Start section above. The image is automatically updated with the latest code changes.
-
+| Environment Variable | Description | Default | Required |
+|---------------------|-------------|---------|----------|
+| `API_BASE_URL` | Your OPNsense instance URL | - | Yes |
+| `API_KEY` | OPNsense API key | - | Yes |
+| `API_SECRET` | OPNsense API secret | - | Yes |
+| `CHECK_INTERVAL` | Check interval in seconds | 60 | No |
 
 ## Troubleshooting
 
-- **400 Bad Request**: Check API credentials and OPNsense API access
-- **Connection errors**: Verify network connectivity to OPNsense
-- **Permission errors**: Ensure the API user has OpenVPN service permissions
-- **Logs**: Use `docker-compose logs -f` for detailed error information
+### Common Issues
 
-## API Details
+- **400 Bad Request**: Check your API credentials and ensure the API user has OpenVPN service permissions
+- **Connection errors**: Verify network connectivity to your OPNsense instance
+- **Permission errors**: Ensure the API user has the necessary permissions for OpenVPN services
+- **No services found**: Check that OpenVPN services are configured and running on OPNsense
 
-- **Status Check**: POST to `/api/openvpn/service/search_sessions` with Basic Auth
-- **Restart Service**: POST to `/api/openvpn/service/restart_service/{id}` with Basic Auth
-- **Authentication**: HTTP Basic Auth using API key/secret
+### Getting Help
 
-## Requirements
-
-- Docker and Docker Compose
-- Access to OPNsense API with valid API key/secret
-- Network connectivity to OPNsense instance
+1. Check the container logs: `docker-compose logs -f`
+2. Verify your `.env` file has correct values
+3. Ensure your OPNsense API is accessible from the Docker host
+4. Check OPNsense firewall rules allow API access
 
 ## Security Notes
 
-- Store API credentials securely, do not commit to version control
+- Store API credentials securely, do not commit `.env` to version control
 - Use strong, unique API credentials
 - Regularly rotate API keys
 - Ensure the container has network access to your OPNsense instance
 - Consider using Docker secrets for sensitive environment variables in production
+
+## Contributing
+
+We welcome contributions! Here's how you can help:
+
+### How to Contribute
+
+1. **Fork the repository** on GitHub
+2. **Create a feature branch**: `git checkout -b feature/your-feature-name`
+3. **Make your changes** and test them thoroughly
+4. **Commit your changes**: `git commit -m "Add your descriptive commit message"`
+5. **Push to your fork**: `git push origin feature/your-feature-name`
+6. **Create a Pull Request** on GitHub
+
+### Pull Request Guidelines
+
+- **Describe your changes** clearly in the PR description
+- **Reference any issues** your PR addresses
+- **Include tests** if you're adding new functionality
+- **Update documentation** if needed
+- **Follow the existing code style**
+- **Ensure CI/CD passes** before submitting
+
+### Development Setup
+
+For contributors who want to develop or test changes:
+
+1. Clone your fork: `git clone https://github.com/your-username/opnsense-vpn-monitor.git`
+2. Copy environment file: `cp .env.example .env`
+3. Edit `.env` with your test credentials
+4. Build and run: `docker-compose -f docker-compose.override.yml up --build`
+
+The `docker-compose.override.yml` file is configured for development and will build the image from source.
+
+### Reporting Issues
+
+- Use GitHub Issues to report bugs or request features
+- Include detailed steps to reproduce the issue
+- Provide relevant logs and configuration (without sensitive data)
+- Specify your OPNsense version and setup
+
+## License
+
+This project is open source. Please check the repository for license information.

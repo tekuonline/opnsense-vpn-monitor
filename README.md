@@ -78,43 +78,6 @@ This project uses automated Docker image building and publishing via GitHub Acti
 
 Simply use the Docker Hub image as shown in the Quick Start section above. The image is automatically updated with the latest code changes.
 
-### For Contributors (Setting up CI/CD)
-
-If you're contributing to this project and want to set up automated publishing:
-
-1. **Create Docker Hub Repository**:
-   - Go to [Docker Hub](https://hub.docker.com) and create a new repository
-   - Note your Docker Hub username and repository name
-
-2. **Configure GitHub Secrets**:
-   - Go to your GitHub repository Settings > Secrets and variables > Actions
-   - Add these secrets:
-     - `DOCKERHUB_USERNAME`: Your Docker Hub username
-     - `DOCKERHUB_TOKEN`: Your Docker Hub access token (create one in Docker Hub Account Settings > Security)
-
-3. **Update Repository References**:
-   - Update `DOCKER_IMAGE` in `.env.example` with your Docker Hub repository
-   - Update the GitHub Actions workflow file (`.github/workflows/docker-publish.yml`) if needed
-
-### Automated Builds
-
-The GitHub Actions workflow automatically:
-- Builds multi-platform images (AMD64 + ARM64)
-- Pushes to Docker Hub on every push to main/master branch
-- Creates versioned tags for releases
-- Generates build attestations for security
-
-### Manual Image Building
-
-To build and push manually (for contributors):
-
-```bash
-# Build for multiple platforms
-docker buildx build --platform linux/amd64,linux/arm64 -t curiohokiest2e/opnsense-vpn-monitor:latest --push .
-
-# Or use the included script
-./build-and-push.sh
-```
 
 ## Troubleshooting
 

@@ -2,55 +2,64 @@
 
 A Docker-based service that monitors OpenVPN connection status via OPNsense API and automatically restarts services that are down.
 
-## Prerequisites
+## Features
 
-- OPNsense firewall with API access enabled
-- Docker and Docker Compose installed on the target system
+- Monitors OpenVPN services using the OPNsense API
+- Checks if services have status "connected" and a valid real_address IP
+- Automatically restarts down services
+- Configurable via environment variables
+- Runs continuously in a Docker container
+- Multi-platform support (AMD64/ARM64)
+- Automated Docker Hub publishing
 
-## Getting API Credentials
+## Quick Start
 
-1. Log into your OPNsense web interface
-2. Navigate to **System > Access > Users** (`/ui/auth/user`)
-3. Select the user you want to use for API access (or create a new one)
-4. Click the **Create API key** button
-5. Download the API key file - it will contain your `key` and `secret`
-6. Use these values for `API_KEY` and `API_SECRET` in your `.env` file
+### Using Pre-built Docker Image (Recommended)
 
-**Note**: Ensure the user has appropriate permissions for OpenVPN service management.
+1. **Get API credentials from OPNsense**:
+   - Log into your OPNsense web interface
+   - Navigate to **System > Access > Users**
+   - Select/create a user for API access
+   - Click **Create API key** and download the credentials
 
-## Configuration
+2. **Set up the service**:
+   ```bash
+   # Clone this repository
+   git clone https://github.com/tekuonline/opnsense-vpn-monitor.git
+   cd opnsense-vpn-monitor
 
-Create a `.env` file in the same directory with your configuration:
+   # Copy and configure environment file
+   cp .env.example .env
+   # Edit .env with your OPNsense API credentials
 
-```
-# OPNsense API Configuration
-API_BASE_URL=https://your-opnsense.com
-API_KEY=your-api-key-here
-API_SECRET=your-api-secret-here
-CHECK_INTERVAL=60
+   # Start the service
+   docker-compose up -d
+   ```
 
-# Docker Image (for production use)
-DOCKER_IMAGE=curiohokiest2e/opnsense-vpn-monitor:latest
-```
+3. **Check logs**:
+   ```bash
+   docker-compose logs -f
+   ```
 
-The service will load these environment variables automatically.
-
-## Quick Start with Docker Hub
-
-The easiest way to run OPNsense VPN Monitor is using the pre-built Docker image from Docker Hub:
+### Manual Docker Run
 
 ```bash
-# Pull the latest image
-docker pull curiohokiest2e/opnsense-vpn-monitor:latest
-
-# Or use the docker-compose.yml (update DOCKER_IMAGE in .env)
-echo "DOCKER_IMAGE=curiohokiest2e/opnsense-vpn-monitor:latest" >> .env
-docker-compose up -d
+docker run -d \
+  --name opnsense-vpn-monitor \
+  --env-file .env \
+  curiohokiest2e/opnsense-vpn-monitor:latest
 ```
 
 ## Development Setup
 
 For development or building from source:
+
+1. Clone this repository
+2. Copy the sample environment file: `cp .env.example .env`
+3. Edit `.env` with your OPNsense API credentials
+4. Build and run: `docker-compose up --build`
+
+**Note**: The `docker-compose.override.yml` file is included for local development and will build the image from source instead of using the pre-built Docker Hub image.
 
 ## Production Deployment
 
@@ -63,9 +72,15 @@ For production use:
 
 ## Docker Hub & CI/CD
 
-This project includes automated Docker image building and publishing via GitHub Actions:
+This project uses automated Docker image building and publishing via GitHub Actions. The latest images are available on Docker Hub at `curiohokiest2e/opnsense-vpn-monitor`.
 
-### Setting up Docker Hub Publishing
+### For Users (Using Pre-built Images)
+
+Simply use the Docker Hub image as shown in the Quick Start section above. The image is automatically updated with the latest code changes.
+
+### For Contributors (Setting up CI/CD)
+
+If you're contributing to this project and want to set up automated publishing:
 
 1. **Create Docker Hub Repository**:
    - Go to [Docker Hub](https://hub.docker.com) and create a new repository
@@ -83,15 +98,15 @@ This project includes automated Docker image building and publishing via GitHub 
 
 ### Automated Builds
 
-The GitHub Actions workflow will automatically:
-- Build multi-platform images (AMD64 + ARM64)
-- Push to Docker Hub on every push to main/master branch
-- Create versioned tags for releases
-- Generate build attestations for security
+The GitHub Actions workflow automatically:
+- Builds multi-platform images (AMD64 + ARM64)
+- Pushes to Docker Hub on every push to main/master branch
+- Creates versioned tags for releases
+- Generates build attestations for security
 
 ### Manual Image Building
 
-To build and push manually:
+To build and push manually (for contributors):
 
 ```bash
 # Build for multiple platforms

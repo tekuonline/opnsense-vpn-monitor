@@ -1,6 +1,6 @@
 services:
   opnsense-vpn-monitor:
-    image: ${DOCKER_IMAGE:-ghcr.io/curiohokiest2e/opnsense-vpn-monitor:latest}
+    image: ${DOCKER_IMAGE:-curiohokiest2e/opnsense-vpn-monitor:latest}
     container_name: opnsense-vpn-monitor
     env_file:
       - .env

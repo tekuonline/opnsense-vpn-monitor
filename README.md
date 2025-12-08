@@ -44,8 +44,9 @@ CHECK_INTERVAL=60
 
 ### Step 3: Run with Docker Compose
 
-Create a `docker-compose.yml` file:
+Create a `docker-compose.yml` file. You can either use an external `.env` file or set the variables directly in the compose file:
 
+#### Option 1: Using .env file (Recommended)
 ```yaml
 services:
   opnsense-vpn-monitor:
@@ -54,6 +55,30 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+```
+
+#### Option 2: Environment variables in compose file
+```yaml
+services:
+  opnsense-vpn-monitor:
+    image: curiohokiest2e/opnsense-vpn-monitor:latest
+    container_name: opnsense-vpn-monitor
+    environment:
+      - API_BASE_URL=https://your-opnsense-instance.com
+      - API_KEY=your-api-key-here
+      - API_SECRET=your-api-secret-here
+      - CHECK_INTERVAL=60
+    restart: unless-stopped
+```
+
+#### Option 3: Portainer Stack (using stack.env)
+```yaml
+services:
+  opnsense-vpn-monitor:
+    image: curiohokiest2e/opnsense-vpn-monitor:latest
+    container_name: opnsense-vpn-monitor
+    restart: unless-stopped
+    env_file: stack.env
 ```
 
 Start the service:

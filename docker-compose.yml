@@ -9,4 +9,6 @@ services:
       - API_KEY=${API_KEY}
       - API_SECRET=${API_SECRET}
       - CHECK_INTERVAL=${CHECK_INTERVAL}
+      - NTFY_TOPIC=${NTFY_TOPIC}
+      - NTFY_URL=${NTFY_URL}
     restart: unless-stopped

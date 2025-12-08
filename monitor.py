@@ -13,6 +13,8 @@ API_BASE_URL = os.getenv('API_BASE_URL')
 API_KEY = os.getenv('API_KEY')
 API_SECRET = os.getenv('API_SECRET')
 CHECK_INTERVAL = int(os.getenv('CHECK_INTERVAL', '60'))  # seconds
+NTFY_TOPIC = os.getenv('NTFY_TOPIC')
+NTFY_URL = os.getenv('NTFY_URL', 'https://ntfy.sh')
 
 def is_service_up(service):
     """Check if a service is up: status connected and real_address is a valid IP"""
@@ -20,6 +22,20 @@ def is_service_up(service):
     real_address = service.get('real_address', '')
     # Consider up if status is 'connected' and real_address is not empty and not '0.0.0.0'
     return status == 'connected' and real_address and real_address != '0.0.0.0'
+
+def send_notification(message, priority='default'):
+    """Send notification via ntfy.sh"""
+    if not NTFY_TOPIC:
+        return  # Skip if no topic configured
+    
+    try:
+        url = f"{NTFY_URL}/{NTFY_TOPIC}"
+        headers = {'Priority': priority}
+        response = requests.post(url, data=message, headers=headers)
+        response.raise_for_status()
+        logging.info(f"Notification sent: {message}")
+    except requests.RequestException as e:
+        logging.error(f"Failed to send notification: {e}")
 
 def check_and_restart_services():
     """Check OpenVPN services and restart if down"""
@@ -47,23 +63,31 @@ def check_and_restart_services():
             description = service.get('description', f'ID {service_id}')
             if not is_service_up(service):
                 logging.warning(f"Service {description} (ID {service_id}) is down. Restarting...")
-                restart_url = f"{API_BASE_URL}/api/openvpn/service/restart_service/{service_id}"
-                restart_headers = {
-                    'Content-Type': 'text/plain'
-                }
-                restart_response = session.post(restart_url, headers=restart_headers, data='{}')
-                restart_response.raise_for_status()
+                send_notification(f"🔄 VPN Service {description} is down, attempting restart...", "high")
                 try:
-                    restart_data = restart_response.json()
-                except json.JSONDecodeError as e:
-                    logging.error(f"Failed to parse restart JSON response: {e}")
-                    logging.error(f"Restart response status: {restart_response.status_code}")
-                    logging.error(f"Restart response text: {restart_response.text[:500]}")
-                    continue
-                if restart_data.get('result') == 'ok':
-                    logging.info(f"Successfully restarted service {description} (ID {service_id})")
-                else:
-                    logging.error(f"Failed to restart service {description} (ID {service_id}): {restart_data}")
+                    restart_url = f"{API_BASE_URL}/api/openvpn/service/restart_service/{service_id}"
+                    restart_headers = {
+                        'Content-Type': 'text/plain'
+                    }
+                    restart_response = session.post(restart_url, headers=restart_headers, data='{}')
+                    restart_response.raise_for_status()
+                    try:
+                        restart_data = restart_response.json()
+                    except json.JSONDecodeError as e:
+                        logging.error(f"Failed to parse restart JSON response: {e}")
+                        logging.error(f"Restart response status: {restart_response.status_code}")
+                        logging.error(f"Restart response text: {restart_response.text[:500]}")
+                        send_notification(f"❌ Failed to parse restart response for VPN Service {description}", "high")
+                        continue
+                    if restart_data.get('result') == 'ok':
+                        logging.info(f"Successfully restarted service {description} (ID {service_id})")
+                        send_notification(f"✅ VPN Service {description} successfully restarted", "default")
+                    else:
+                        logging.error(f"Failed to restart service {description} (ID {service_id}): {restart_data}")
+                        send_notification(f"❌ Failed to restart VPN Service {description}: {restart_data}", "high")
+                except requests.RequestException as e:
+                    logging.error(f"Failed to restart service {description} (ID {service_id}): {e}")
+                    send_notification(f"❌ Failed to restart VPN Service {description}: {str(e)}", "high")
             else:
                 logging.info(f"Service {description} (ID {service_id}) is up")
 

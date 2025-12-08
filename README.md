@@ -7,6 +7,7 @@ A Docker-based service that monitors OpenVPN connection status via OPNsense API 
 - Monitors OpenVPN services using the OPNsense API
 - Checks if services have status "connected" and a valid real_address IP
 - Automatically restarts down services
+- Sends notifications via ntfy.sh when services go down or restart fails
 - Configurable via environment variables
 - Runs continuously in a Docker container
 - Multi-platform support (AMD64/ARM64)
@@ -40,6 +41,10 @@ API_SECRET=your-api-secret-here
 
 # Check interval in seconds (default: 60)
 CHECK_INTERVAL=60
+
+# Optional: ntfy.sh notifications
+# NTFY_TOPIC=your-ntfy-topic
+# NTFY_URL=https://ntfy.sh
 ```
 
 ### Step 3: Run with Docker Compose
@@ -68,6 +73,8 @@ services:
       - API_KEY=your-api-key-here
       - API_SECRET=your-api-secret-here
       - CHECK_INTERVAL=60
+      - NTFY_TOPIC=your-ntfy-topic
+      - NTFY_URL=https://ntfy.sh
     restart: unless-stopped
 ```
 
@@ -119,6 +126,27 @@ You should see output like:
 | `API_KEY` | OPNsense API key | - | Yes |
 | `API_SECRET` | OPNsense API secret | - | Yes |
 | `CHECK_INTERVAL` | Check interval in seconds | 60 | No |
+| `NTFY_TOPIC` | ntfy.sh topic for notifications | - | No |
+| `NTFY_URL` | ntfy.sh server URL | https://ntfy.sh | No |
+
+## Notifications
+
+The service can send notifications via [ntfy.sh](https://ntfy.sh) when VPN services go down and are restarted, or when restart attempts fail.
+
+### Setting up ntfy.sh notifications:
+
+1. Choose a topic name (e.g., `opnsense-vpn-alerts`)
+2. Set the `NTFY_TOPIC` environment variable
+3. Optionally set `NTFY_URL` if using a self-hosted ntfy instance
+4. Subscribe to the topic using the ntfy app or web interface
+
+### Notification types:
+
+- **Service down**: High priority notification when a VPN service is detected as down
+- **Restart success**: Default priority notification when a service is successfully restarted
+- **Restart failure**: High priority notification when a restart attempt fails
+
+Notifications are sent with emojis and clear messages for easy identification.
 
 ## Troubleshooting
 
